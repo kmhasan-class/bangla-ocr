@@ -42,7 +42,7 @@ def scan_line(image, image_to_change):
 # file_name = open_file()
 # print(file_name)
 
-file_name = 'test_images/zm2.jpg'
+file_name = 'test_images/bangla_gan_rotated.png'
 
 original_image = cv2.imread(file_name)
 height, width, channel = original_image.shape
@@ -75,7 +75,7 @@ for i in range(len(hough_lines)):
         y1 = int(y0 + 1000 * (a))
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
-        print(x1, y1, x2, y2)
+        print(rho, theta, x1, y1, x2, y2)
         cv2.line(original_image, (x1, y1), (x2, y2), (0, 0, 255), 1)
 
 cv2.imshow('Hough Transform Lines', original_image)
