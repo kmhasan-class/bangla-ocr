@@ -12,6 +12,7 @@ from tkinter import *
 from tkinter.filedialog import askopenfilename
 
 import cv2
+import numpy as np
 
 
 def open_file():
@@ -38,20 +39,46 @@ def scan_line(image, image_to_change):
         cv2.line(image_to_change, (0, row), (width, row), (0, 0, 0), 1)
 
 
-file_name = open_file()
-print(file_name)
+# file_name = open_file()
+# print(file_name)
+
+file_name = 'test_images/zm2.jpg'
 
 original_image = cv2.imread(file_name)
+height, width, channel = original_image.shape
 gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
 blur_image = cv2.blur(gray_image, (3, 3))
-edges = cv2.Canny(blur_image, 50, 150, apertureSize=3)
-th1 = cv2.adaptiveThreshold(blur_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+#edges = cv2.Canny(blur_image, 50, 150, apertureSize=3)
 
-scan_line(edges, blur_image)
-# cv2.imshow('Original Image', original_image)
-# cv2.imshow('Grayscale Image', gray_image)
-cv2.imshow('Scan line', blur_image)
-# cv2.imshow('Threshold', th1)
+th1 = cv2.adaptiveThreshold(blur_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+
+# return value: a set of rho, theta values
+# parameter 1: input image -- the thresholded one
+# parameter 2: value for rho in pixels
+# parameter 3: value for theta
+# parameters 2 and 3 are used to get the votes in discrete intervals
+# parameter 4: the minimum number of pixels you need on a line to consider it a line
+# -- here I'm saying we need at least 0.5 (or 50%) pixels to be on the line
+hough_lines = cv2.HoughLines(th1, 1, np.pi / 180.0, int(width * 0.5))
+
+cv2.imshow('Original Image', original_image)
+cv2.imshow('Thresholded Image', th1)
+
+# we run through each lines and plot them on the original image
+for i in range(len(hough_lines)):
+    for rho, theta in hough_lines[i]:
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+        print(x1, y1, x2, y2)
+        cv2.line(original_image, (x1, y1), (x2, y2), (0, 0, 255), 1)
+
+cv2.imshow('Hough Transform Lines', original_image)
 
 while True:
     k = cv2.waitKey(0) & 0xFF
